@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Una moneta</title>
+    <style>
+
+#output {
+
+    font-family: "Courier New", monospace;
+    font-size: 18px;
+    line-height: 1.4;
+    white-space: pre;
+    border: 1px solid black;
+    padding: 10px;
+
+    width: 1050px;
+    height: 450px;
+
+    overflow-y: auto;
+
+}
+
+.spiegazione{
+
+    font-size:22px;
+    margin-top:5px;
+    margin-bottom:8px;
+
+}
+
+.istruzioni{
+
+    font-size:18px;
+    margin-top:0px;
+    margin-bottom:20px;
+
+}
+
+.home {
+
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 8px 15px;
+
+    border: 1px solid black;
+    border-radius: 5px;
+
+    text-decoration: none;
+    color: black;
+
+    font-size: 18px;
+
+}
+
+
+.home:hover {
+
+    background-color: #eee;
+
+}
+
+</style>
+</head>
+
+<body>
+
+<h1> Lanciamo una moneta! </h1>
+<p class="istruzioni">
+Indicare il numero di monete da lanciare.
+</p>
+
+<p>
+Numero di lanci:
+<input id="nlanci" type="number" min="1" max="10000" value="100">
+</p>
+
+
+
+<button id="start">START</button>
+<button id="stop">STOP</button>
+
+<p>
+Velocità:
+<select id="velocita">
+
+<option value="200">Lenta</option>
+<option value="50" selected>Normale</option>
+<option value="20">Veloce</option>
+
+</select>
+</p>
+
+
+
+<pre id="output"></pre>
+<a class="home" href="index.html">
+← Torna alla Home
+</a>
+
+<script>
+
+let timer = null;
+
+let valori = [];
+
+let posizione = 0;
+
+
+
+function lancioMoneta() {
+    valori.push(Math.random() < 0.5 ? "T" : "C");
+}
+
+
+function aggiungiConsole(testo){
+
+    let output = document.getElementById("output");
+
+    output.textContent += testo;
+
+    output.scrollTop = output.scrollHeight;
+
+}
+
+
+
+function start(){
+
+    if(timer != null){
+        clearInterval(timer);
+    }
+
+
+    let n = Number(document.getElementById("nlanci").value);
+
+
+    valori = [];
+
+    posizione = 0;
+
+
+    document.getElementById("output").textContent = "";
+
+
+    for(let i=0; i<n; i++){
+
+        lancioMoneta();
+
+    }
+
+
+    let perRiga = 45;
+
+    let velocita = Number(document.getElementById("velocita").value);
+    timer = setInterval(function(){
+
+
+        if(posizione >= valori.length){
+
+            clearInterval(timer);
+            return;
+
+        }
+
+
+        let riga = "";
+
+
+        for(let j=0; j<perRiga && posizione < valori.length; j++){
+
+            riga += valori[posizione] + " ";
+
+            posizione++;
+
+        }
+
+
+        aggiungiConsole(riga.trim() + "\n");
+
+
+    },velocita);
+
+
+}
+
+
+
+function stop(){
+
+    clearInterval(timer);
+
+}
+    
+
+
+document.getElementById("start").onclick = start;
+
+document.getElementById("stop").onclick = stop;
+
+</script>
+
+
+</body>
+</html>

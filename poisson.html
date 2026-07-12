@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+
+<meta charset="UTF-8">
+
+<title>Distribuzione di Poisson</title>
+
+<style>
+
+.home {
+
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 8px 15px;
+
+    border: 1px solid black;
+    border-radius: 5px;
+
+    text-decoration: none;
+    color: black;
+
+    font-size: 18px;
+
+}
+
+
+.home:hover {
+
+    background-color: #eee;
+
+}
+
+.spiegazione{
+
+    font-size:22px;
+    margin-top:5px;
+    margin-bottom:8px;
+
+}
+
+.istruzioni{
+
+    font-size:18px;
+    margin-top:0px;
+    margin-bottom:20px;
+
+}
+
+body{
+
+    font-family:Arial, Helvetica, sans-serif;
+    margin:25px;
+    background:white;
+
+}
+
+h1{
+
+    margin-bottom:5px;
+
+}
+
+#controlli{
+
+    margin-bottom:20px;
+
+}
+
+label{
+
+    display:inline-block;
+    width:170px;
+
+}
+
+input{
+
+    width:90px;
+    font-size:16px;
+
+}
+
+button{
+
+    font-size:18px;
+    margin-left:15px;
+    padding:5px 15px;
+
+}
+
+#contenitore{
+
+    display:flex;
+    gap:30px;
+    align-items:flex-start;
+
+}
+
+canvas{
+
+    border:1px solid black;
+
+}
+
+#canvasPioggia{
+
+    width:620px;
+    height:620px;
+
+}
+
+#canvasBarplot{
+
+    width:420px;
+    height:620px;
+
+}
+
+#info{
+
+    margin-top:20px;
+    font-size:22px;
+    line-height:1.8;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Distribuzione di Poisson</h1>
+
+
+<p class="spiegazione">
+Sta piovendo. Quante mattonelle sono asciutte? Su quante è caduta una goccia soltanto? E due gocce? E tre?...
+</p>
+
+<p class="istruzioni">
+Indicare il numero complessivo di gocce di pioggia.
+</p>
+
+<div id="controlli">
+
+<label>Numero di gocce</label>
+
+<input
+id="ngocce"
+type="number"
+min="1"
+max="5000"
+value="100">
+
+<br><br>
+
+<label>Colore</label>
+
+<input
+type="radio"
+name="colore"
+value="blue"
+checked>
+
+Blu
+
+<input
+type="radio"
+name="colore"
+value="red">
+
+Rosso
+
+<button id="start">START</button>
+
+<button id="stop">STOP</button>
+
+</div>
+
+
+
+<div id="contenitore">
+
+<canvas
+id="canvasPioggia"
+width="620"
+height="620">
+</canvas>
+
+<canvas
+id="canvasBarplot"
+width="420"
+height="620">
+</canvas>
+
+</div>
+
+
+
+<div id="info">
+
+<div>
+Gocce cadute:
+<span id="cadute">0</span>
+</div>
+
+<div>
+Mattonelle:
+100
+</div>
+
+<div>
+Media per mattonella:
+<span id="media">0.00</span>
+</div>
+
+</div>
+
+<a class="home" href="index.html">
+← Torna alla Home
+</a>
+
+<script>
+const canvas = document.getElementById("canvasPioggia");
+const ctx = canvas.getContext("2d");
+
+const canvasBar = document.getElementById("canvasBarplot");
+const bar = canvasBar.getContext("2d");
+
+let timer = null;
+
+const lato = 62;          // 620 / 10
+
+// matrice 10x10 (ci servirà dopo)
+
+let griglia = [];
+
+for(let i=0;i<10;i++){
+
+    griglia[i]=[];
+
+    for(let j=0;j<10;j++){
+
+        griglia[i][j]=0;
+
+    }
+
+}
+
+function disegnaGriglia(){
+
+    ctx.clearRect(0,0,620,620);
+
+    ctx.strokeStyle="gray";
+    ctx.lineWidth=1;
+
+    for(let i=0;i<=10;i++){
+
+        ctx.beginPath();
+        ctx.moveTo(i*lato,0);
+        ctx.lineTo(i*lato,620);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0,i*lato);
+        ctx.lineTo(620,i*lato);
+        ctx.stroke();
+
+    }
+
+}
+
+function disegnaGoccia(x,y,r,colore){
+
+    ctx.beginPath();
+
+    ctx.arc(x,y,r,0,2*Math.PI);
+
+    if(colore=="blue"){
+
+        ctx.strokeStyle="blue";
+        ctx.stroke();
+
+    }else{
+
+        ctx.fillStyle="red";
+        ctx.fill();
+
+    }
+
+}
+
+function animaGoccia(x,y,r,colore,callback){
+
+    disegnaGoccia(x,y,2.3*r,colore);
+
+    setTimeout(function(){
+
+        disegnaGriglia();
+
+        ridisegnaGocce();
+
+        disegnaGoccia(x,y,1.5*r,colore);
+
+        setTimeout(function(){
+
+            disegnaGriglia();
+
+            ridisegnaGocce();
+
+            disegnaGoccia(x,y,r,colore);
+
+            callback();
+
+        },20);
+
+    },20);
+
+}
+
+let gocce = [];
+
+function ridisegnaGocce(){
+
+    for(let g of gocce){
+
+        disegnaGoccia(g.x,g.y,g.r,g.colore);
+
+    }
+
+}
+
+function disegnaBarplot(){
+
+    bar.clearRect(0,0,420,620);
+
+    let frequenze=[];
+
+
+    for(let i=0;i<10;i++){
+
+        for(let j=0;j<10;j++){
+
+            let v=griglia[i][j];
+
+            if(frequenze[v]==undefined){
+
+                frequenze[v]=0;
+
+            }
+
+            frequenze[v]++;
+
+        }
+
+    }
+
+    const margineSin=50;
+
+    const margineBasso=40;
+
+    const larghezza=340;
+
+    const altezza=520;
+
+    bar.strokeStyle="black";
+
+    bar.lineWidth=2;
+
+    bar.beginPath();
+
+    bar.moveTo(margineSin,20);
+
+    bar.lineTo(margineSin,20+altezza);
+
+    bar.lineTo(margineSin+larghezza,20+altezza);
+
+    bar.stroke();
+
+    for(let i=0;i<frequenze.length;i++){
+
+        if(frequenze[i]==undefined){
+
+            frequenze[i]=0;
+
+        }
+
+    }
+
+    let maxFreq=Math.max(...frequenze);
+
+    let scala=altezza/maxFreq;
+
+    let nBarre=frequenze.length;
+
+    let bw=larghezza/nBarre;
+
+    for(let i=0;i<nBarre;i++){
+
+        let h=frequenze[i]*scala;
+
+        let x=margineSin+i*bw;
+
+        let y=20+altezza-h;
+
+        bar.fillStyle="black";
+
+        bar.fillRect(
+
+            x+2,
+
+            y,
+
+            bw-4,
+
+            h
+
+        );
+
+        bar.fillStyle="black";
+
+        bar.font="14px Arial";
+
+        bar.textAlign="center";
+
+        bar.fillText(
+
+            i,
+
+            x+bw/2,
+
+            20+altezza+20
+
+        );
+
+        if(frequenze[i]>0){
+            bar.fillText(
+
+                frequenze[i],
+
+                x+bw/2,
+
+                y-5
+
+            );
+        }
+    }
+
+    bar.save();
+
+    bar.translate(15,300);
+
+    bar.rotate(-Math.PI/2);
+
+    bar.fillText(
+
+       "Numero di mattonelle",
+
+        0,
+
+        0
+
+    );
+
+    bar.restore();
+
+    bar.fillText(
+
+        "Numero di gocce",
+
+        220,
+
+        590
+
+    );
+
+}
+
+function start(){
+
+    clearInterval(timer);
+
+    disegnaGriglia();
+
+    gocce=[];
+
+    for(let i=0;i<10;i++){
+
+      for(let j=0;j<10;j++){
+
+            griglia[i][j]=0;
+
+        }
+
+    }
+
+    let n=Number(document.getElementById("ngocce").value);
+
+    let colore=document.querySelector('input[name="colore"]:checked').value;
+
+    let i=0;
+
+    timer=setInterval(function(){
+
+        if(i>=n){
+
+            clearInterval(timer);
+
+            return;
+
+        }
+
+        let x=Math.random()*620;
+
+        let y=Math.random()*620;
+
+        let r=2+Math.random()*6;
+
+        animaGoccia(x,y,r,colore,function(){
+
+            gocce.push({
+
+                x:x,
+
+                y:y,
+
+                r:r,
+
+                colore:colore
+
+            });
+
+            let colonna = Math.floor(x/lato);
+
+            let riga = Math.floor(y/lato);
+
+            griglia[riga][colonna]++;
+            disegnaBarplot();
+
+            document.getElementById("cadute").textContent = gocce.length;
+            document.getElementById("media").textContent =
+            (gocce.length/100).toFixed(2);
+
+        });
+
+        i++;
+
+    },70);
+
+}
+
+function stop(){
+
+    clearInterval(timer);
+
+}
+
+document.getElementById("start").onclick=start;
+
+document.getElementById("stop").onclick=stop;
+
+disegnaGriglia();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Tanti dadi: grafico</title>
+<style>
+body{font-family:Arial,sans-serif;margin:20px}
+canvas{border:1px solid #000}
+label{display:inline-block;width:170px}
+input{width:90px}
+button{margin-right:10px}
+
+.spiegazione{
+
+    font-size:22px;
+    margin-top:5px;
+    margin-bottom:8px;
+
+}
+
+.istruzioni{
+
+    font-size:18px;
+    margin-top:0px;
+    margin-bottom:20px;
+
+}
+.home {
+
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 8px 15px;
+
+    border: 1px solid black;
+    border-radius: 5px;
+
+    text-decoration: none;
+    color: black;
+
+    font-size: 18px;
+
+}
+
+
+.home:hover {
+
+    background-color: #eee;
+
+}
+</style>
+</head>
+<body>
+<h2>Distribuzione della somma di più dadi</h2>
+<p class="spiegazione">
+Lanciamo tanti dadi e facciamo la somma. Costruiamo un grafico in tempo reale.
+</p>
+<p class="istruzioni">
+Indicare il numero di dadi che desideri sommare, il numero di facce e il numero di prove.
+</p>
+
+<p><label>Numero dadi</label><input id="k" type="number" min="1" max="100" value="2"></p>
+<p><label>Numero facce</label><input id="N" type="number" min="1" max="1000000000" value="6"></p>
+<p><label>Numero prove</label><input id="n" type="number" min="1" max="10000" value="1000"></p>
+
+<button onclick="start()">START</button>
+<button onclick="stopAnim()">STOP</button>
+
+<p><canvas id="cv" width="1000" height="600"></canvas></p>
+
+<a class="home" href="index.html">
+← Torna alla Home
+</a>
+
+<script>
+let timer=null;
+
+function rainbow(n){
+ let c=[];
+ for(let i=0;i<n;i++) c.push(`hsl(${360*i/n},100%,50%)`);
+ return c;
+}
+
+function draw(freq,N,k,i){
+ const cv=document.getElementById("cv");
+ const g=cv.getContext("2d");
+ const w=cv.width,h=cv.height;
+ g.clearRect(0,0,w,h);
+
+ let title=(k==1?"1 dado":k+" dadi");
+ if(N!=6) title+=" a "+N+" facce";
+
+ g.font="24px Arial";
+ g.textAlign="center";
+ g.fillStyle="black";
+ g.fillText(title,w/2,30);
+ g.fillText("n = "+i,w/2,60);
+
+ const L=70,R=30,T=90,B=60;
+ const pw=w-L-R, ph=h-T-B;
+
+ g.beginPath();
+ g.moveTo(L,T);
+ g.lineTo(L,h-B);
+ g.lineTo(w-R,h-B);
+ g.stroke();
+
+ const max=Math.max(...freq,1);
+ const cols=rainbow(freq.length);
+ const bw=pw/freq.length;
+
+ for(let j=0;j<freq.length;j++){
+   let bh=ph*freq[j]/max;
+   g.fillStyle=cols[j];
+   g.fillRect(L+j*bw+1,h-B-bh,bw-2,bh);
+   g.fillStyle="black";
+   g.font="12px Arial";
+   g.save();
+   g.translate(L+j*bw+bw/2,h-B+15);
+   g.rotate(-0.35);
+   g.textAlign="center";
+   g.fillText((k+j).toString(),0,0);
+   g.restore();
+ }
+}
+
+function stopAnim(){ if(timer) clearTimeout(timer); }
+
+function start(){
+ stopAnim();
+ const n=+document.getElementById("n").value;
+ const N=+document.getElementById("N").value;
+ const k=+document.getElementById("k").value;
+
+ let freq=new Array(k*N-k+1).fill(0);
+ let i=0;
+
+ function step(){
+   if(i>=n) return;
+   let s=0;
+   for(let j=0;j<k;j++) s+=Math.floor(Math.random()*N)+1;
+   freq[s-k]++;
+   i++;
+   draw(freq,N,k,i);
+
+   let d=20;
+   if(i<100) d=30;
+   else if(i<250) d=20;
+   else if(i<500) d=10;
+   else d=2;
+   timer=setTimeout(step,d);
+ }
+ step();
+}
+</script>
+</body>
+</html>

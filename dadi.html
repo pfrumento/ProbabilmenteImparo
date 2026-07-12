@@ -1,0 +1,279 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tanti dadi</title>
+    <style>
+
+#output {
+
+    font-family: "Courier New", monospace;
+    font-size: 18px;
+    line-height: 1.4;
+    white-space: pre;
+    border: 1px solid black;
+    padding: 10px;
+
+    width: 1050px;
+    height: 450px;
+
+    overflow-y: auto;
+
+}
+.spiegazione{
+
+    font-size:22px;
+    margin-top:5px;
+    margin-bottom:8px;
+
+}
+
+.istruzioni{
+
+    font-size:18px;
+    margin-top:0px;
+    margin-bottom:20px;
+
+}
+
+.home {
+
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 8px 15px;
+
+    border: 1px solid black;
+    border-radius: 5px;
+
+    text-decoration: none;
+    color: black;
+
+    font-size: 18px;
+
+}
+
+
+.home:hover {
+
+    background-color: #eee;
+
+}
+</style>
+
+
+</head>
+
+<body>
+
+<h1>Lancia tanti dadi e calcola la somma</h1>
+
+<p class="istruzioni">
+Scegli quanti dadi sommare, il numero di facce di ognuno e il numero di repliche.
+</p>
+
+
+<p>
+Numero di dadi:
+<input id="ndadi" 
+       type="number" 
+       min="1" 
+       max="100" 
+       value="4">
+</p>
+
+<p>
+Numero di facce:
+<input id="facce" 
+       type="number" 
+       min="1" 
+       max="1000000000" 
+       value="6">
+</p>
+
+<p>
+Numero di repliche:
+<input id="nesperimenti" 
+       type="number" 
+       min="1" 
+       max="10000" 
+       value="100">
+</p>
+
+
+
+
+<button id="start">START</button>
+<button id="stop">STOP</button>
+
+<p>
+Velocità:
+<select id="velocita">
+
+<option value="200">Lenta</option>
+<option value="50" selected>Normale</option>
+<option value="20">Veloce</option>
+
+</select>
+</p>
+
+
+
+<pre id="output"></pre>
+<a class="home" href="index.html">
+← Torna alla Home
+</a>
+
+<script>
+
+let timer = null;
+
+let valori = [];
+
+let posizione = 0;
+
+
+
+function lancioDado(N){
+
+    return Math.floor(Math.random()*N)+1;
+
+}
+
+function lancioDadi(k,N){
+
+    let risultato = [];
+
+    for(let i=0; i<k; i++){
+
+        risultato.push(lancioDado(N));
+
+    }
+
+    return risultato;
+
+}
+
+function stringaDadi(x){
+
+    if(x.length == 1){
+
+        return String(x[0]);
+
+    }
+
+
+    let somma = 0;
+
+    let riga = "";
+
+
+    for(let i=0; i<x.length; i++){
+
+        somma += x[i];
+
+        riga += x[i];
+
+        if(i < x.length-1){
+
+            riga += " + ";
+
+        }
+
+    }
+
+
+    riga += " = " + somma;
+
+
+    return riga;
+
+}
+
+function numeriPerRiga(N){
+
+    let cifre = String(N).length;
+
+    let output = document.getElementById("output");
+
+    let larghezzaPixel = output.clientWidth;
+
+    let carattere = 11;   // circa la larghezza di un carattere Courier
+
+    let larghezzaCaratteri = Math.floor(larghezzaPixel / carattere);
+
+    return Math.max(1, Math.floor(larghezzaCaratteri / (cifre + 1)));
+
+}
+
+
+
+function aggiungiConsole(testo){
+
+    let output = document.getElementById("output");
+
+    output.textContent += testo;
+
+    output.scrollTop = output.scrollHeight;
+
+}
+
+
+
+function start(){
+
+     if(timer != null){
+        clearInterval(timer);
+    }
+
+    let k = Number(document.getElementById("ndadi").value);
+    let N = Number(document.getElementById("facce").value);
+    let n = Number(document.getElementById("nesperimenti").value);
+
+    valori = [];
+    posizione = 0;
+
+
+    document.getElementById("output").textContent = "";
+
+
+    for(let i=0; i<n; i++){
+
+        valori.push(stringaDadi(lancioDadi(k,N)));
+
+    }
+
+
+    let perRiga = numeriPerRiga(N);
+
+    let velocita = Number(document.getElementById("velocita").value);
+    timer = setInterval(function(){
+        if(posizione >= valori.length){
+            clearInterval(timer);
+            return;
+        }
+        let riga = valori[posizione];
+        posizione++;
+        aggiungiConsole(riga.trim() + "\n");
+    },velocita);
+}
+
+
+
+function stop(){
+
+    clearInterval(timer);
+
+}
+    
+
+
+document.getElementById("start").onclick = start;
+
+document.getElementById("stop").onclick = stop;
+
+</script>
+
+
+</body>
+</html>
