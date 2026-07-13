@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Dado con nomi</title>
+<style>
+body{font-family:Arial,sans-serif;margin:20px}
+canvas{border:1px solid #000}
+label{display:inline-block;width:170px}
+input{width:90px}
+button{margin-right:10px}
+
+.spiegazione{
+
+    font-size:22px;
+    margin-top:5px;
+    margin-bottom:8px;
+
+}
+
+.istruzioni{
+
+    font-size:18px;
+    margin-top:0px;
+    margin-bottom:20px;
+
+}
+.home {
+
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 8px 15px;
+
+    border: 1px solid black;
+    border-radius: 5px;
+
+    text-decoration: none;
+    color: black;
+
+    font-size: 18px;
+
+}
+
+
+.home:hover {
+
+    background-color: #eee;
+
+}
+</style>
+</head>
+<body>
+<h2>Estrazione casuale di un bambino</h2>
+<p class="spiegazione">
+Lanciamo un dado con i vostri nomi e costruiamo il grafico in tempo reale.
+</p>
+<p class="istruzioni">
+Scrivi i nomi separandoli con virgole o punti e virgola, poi indica il numero di lanci.
+</p>
+
+<p>
+<label style="vertical-align:top">
+Nomi
+</label>
+
+<textarea id="nomi"
+rows="4"
+cols="40">Anna, Luca, Marco, Giulia</textarea>
+</p>
+<p><label>Numero lanci</label><input id="n" type="number" min="1" max="10000" value="100"></p>
+
+<button onclick="start()">START</button>
+<button onclick="stopAnim()">STOP</button>
+
+<p><canvas id="cv" width="1000" height="600"></canvas></p>
+
+<a class="home" href="index.html">
+← Torna alla Home
+</a>
+
+<script>
+let timer=null;
+
+function rainbow(n){
+ let c=[];
+ for(let i=0;i<n;i++) c.push(`hsl(${360*i/n},100%,50%)`);
+ return c;
+}
+
+function draw(freq,nomi,i){
+ const cv=document.getElementById("cv");
+ const g=cv.getContext("2d");
+ const w=cv.width,h=cv.height;
+ g.clearRect(0,0,w,h);
+
+ let title="Estrazione casuale di bambini";
+
+ g.font="24px Arial";
+ g.textAlign="center";
+ g.fillStyle="black";
+ g.fillText(title,w/2,30);
+ g.fillText("n = "+i,w/2,60);
+
+ const L=70,R=30,T=90,B=130;
+ const pw=w-L-R, ph=h-T-B;
+
+ g.beginPath();
+ g.moveTo(L,T);
+ g.lineTo(L,h-B);
+ g.lineTo(w-R,h-B);
+ g.stroke();
+
+ const max=Math.max(...freq,1);
+ const cols=rainbow(freq.length);
+ const bw=pw/freq.length;
+
+ for(let j=0;j<freq.length;j++){
+   let bh=ph*freq[j]/max;
+   g.fillStyle=cols[j];
+   g.fillRect(L+j*bw+1,h-B-bh,bw-2,bh);
+   g.fillStyle="black";
+   g.font="18px Arial";
+   g.save();
+   g.translate(L+j*bw+bw/2+8,h-B+35);
+   g.rotate(-Math.PI/4);
+   g.textAlign="right";
+   g.fillText(nomi[j],0,0);
+   g.restore();
+ }
+}
+
+function stopAnim(){ if(timer) clearTimeout(timer); }
+
+function start(){
+ stopAnim();
+ const n=+document.getElementById("n").value;
+ const testo=document.getElementById("nomi").value;
+ const nomi=testo
+.split(/[;,]/)
+.map(x=>x.trim())
+.filter(x=>x!="");
+if(nomi.length==0){
+    alert("Inserisci almeno un nome.");
+    return;
+}
+
+ let freq=new Array(nomi.length).fill(0);
+ let i=0;
+
+ function step(){
+   if(i>=n) return;
+   let s=Math.floor(Math.random()*nomi.length);
+   freq[s]++;
+   i++;
+   draw(freq,nomi,i)
+
+   let d=20;
+   if(i<100) d=30;
+   else if(i<250) d=20;
+   else if(i<500) d=10;
+   else d=2;
+   timer=setTimeout(step,d);
+ }
+ step();
+}
+</script>
+</body>
+</html>
