@@ -131,6 +131,7 @@ function lancioMonete(k){
     let riga = "";
 
     let teste = 0;
+    let croci = 0;
 
     for(let i=0; i<k; i++){
 
@@ -144,11 +145,13 @@ function lancioMonete(k){
 
             riga += "C";
 
+            croci++;
+
         }
 
     }
 
-    return riga + "    (" + teste + " " + (teste == 1 ? "Testa" : "Teste") + ")";
+    return riga + "    (" + teste + " " + (teste == 1 ? "Testa" : "Teste") + ", " + croci + " " + (croci == 1 ? "Croce" : "Croci") + ")";
 
 }
 
