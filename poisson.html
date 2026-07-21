@@ -75,11 +75,20 @@ label{
 
 }
 
-input{
+input[type="number"],
+input[type="text"] {
+    width: 90px;
+    font-size: 16px;
+}
 
-    width:90px;
-    font-size:16px;
+input[type="radio"] {
+    width: auto;
+    margin-right: 3px;
+}
 
+label.radio {
+    width: auto;
+    display: inline;
 }
 
 button{
@@ -156,22 +165,17 @@ value="100">
 
 <br><br>
 
-<label>Colore</label>
+<span>Colore:</span>
 
-<input
-type="radio"
-name="colore"
-value="blue"
-checked>
+<label class="radio">
+    <input type="radio" name="colore" value="blue" checked>
+    Blu
+</label>
 
-Blu
-
-<input
-type="radio"
-name="colore"
-value="red">
-
-Rosso
+<label class="radio">
+    <input type="radio" name="colore" value="red">
+    Rosso
+</label>
 
 <button id="start">START</button>
 
